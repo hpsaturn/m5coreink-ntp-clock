@@ -3,14 +3,14 @@
 SHT3X sht3x;
 BMM150 bmm = BMM150();
 bmm150_mag_data value_offset;
-Adafruit_BMP280 bme;
+Adafruit_BMP280 bmp;
 
 float tmp = 0.0;
 float hum = 0.0;
 float pressure = 0.0;
 int setup_flag = 1;
 
-void calibrate(uint32_t timeout) {
+void bmmCalibration(uint32_t timeout) {
     int16_t value_x_min = 0;
     int16_t value_x_max = 0;
     int16_t value_y_min = 0;
@@ -29,6 +29,8 @@ void calibrate(uint32_t timeout) {
     delay(100);
 
     timeStart = millis();
+
+    Serial.print("Calibration");
 
     while ((millis() - timeStart) < timeout) {
         bmm.read_mag_data();
@@ -73,28 +75,33 @@ void calibrate(uint32_t timeout) {
         delay(1);
     }
 
+    Serial.println("done.");
+
     value_offset.x = value_x_min + (value_x_max - value_x_min) / 2;
     value_offset.y = value_y_min + (value_y_max - value_y_min) / 2;
     value_offset.z = value_z_min + (value_z_max - value_z_min) / 2;
 }
 
+void bmmInit() {
+    if (bmm.initialize() == BMM150_E_ID_NOT_CONFORM) {
+        Serial.println("[BMM150] Chip ID can not read!");
+    } else {
+        Serial.println("[BMM150] Initialize done!");
+        bmmCalibration(10);
+    }
+}
+
+void bmpInit() {
+    if (!bmp.begin(0x76)) {
+        Serial.println("[BMP280] Could not find a valid BMP280 sensor, check wiring!");
+    }
+}
+
 void envsensors_init() {
     Wire.begin(25,26);
-    delay(1000);
-    if (bmm.initialize() == BMM150_E_ID_NOT_CONFORM) {
-        Serial.println("Chip ID can not read!");
-        while (1)
-            ;
-    } else {
-        Serial.println("Initialize done!");
-    }
-    if (!bme.begin(0x76)) {
-        Serial.println("Could not find a valid BMP280 sensor, check wiring!");
-        while (1)
-            ;
-    }
-    calibrate(10);
-    Serial.print("\n\rCalibrate done..");
+    delay(100);
+    bmmInit();
+    bmpInit();
 }
 
 void envsensors_loop() {
@@ -137,8 +144,8 @@ void envsensors_loop() {
         Serial.printf("[SHT30] humi: %2.1f\n", hum);
         Serial.printf("[SHT30] temp: %2.1f\n", tmp);
     }
-    float pressure = bme.readPressure();
-    float temp = bme.readTemperature();
+    float pressure = bmp.readPressure();
+    float temp = bmp.readTemperature();
     Serial.printf("[BMP280] pressure: %2.1f\n", pressure);
     Serial.printf("[BMP280] temp: %2.1f\n", temp);
     // M5.Lcd.setCursor(0, 60, 2);
@@ -147,20 +154,7 @@ void envsensors_loop() {
 
     if (!setup_flag) {
         setup_flag = 1;
-
-        if (bmm.initialize() == BMM150_E_ID_NOT_CONFORM) {
-            Serial.println("Chip ID can not read!");
-            while (1)
-                ;
-        } else {
-            Serial.println("Initialize done!");
-        }
-        if (!bme.begin(0x76)) {
-            Serial.println("Could not find a valid BMP280 sensor, check wiring!");
-            while (1)
-                ;
-        }
-        calibrate(10);
-        Serial.print("\n\rCalibrate done..");
+        bmmInit();
+        bmpInit();
     }
 }
