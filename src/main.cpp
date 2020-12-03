@@ -3,6 +3,7 @@
 #include <WiFi.h>
 #include "icon.h"
 #include "esp_adc_cal.h"
+#include <envsensors.hpp>
 
 Ink_Sprite TimePageSprite(&M5.M5Ink);
 Ink_Sprite TimeSprite(&M5.M5Ink);
@@ -463,8 +464,8 @@ void setup()
     M5.update();
     if( M5.BtnMID.isPressed())
     {
-        M5.Speaker.tone(2700,200);
-        delay(100);
+        // M5.Speaker.tone(2700,200);
+        // delay(100);
         testMode = true;
         M5.Speaker.mute();
     }
@@ -483,13 +484,15 @@ void setup()
         testPage();
     }
     drawTimePage();
-    M5.Speaker.tone(2700,200);
+    envsensors_init();
+    // M5.Speaker.tone(2700,200);
 }
 
 void loop()
 {
     flushTimePage();
     WifiScanPage();
+    envsensors_loop();
     /*
     if( M5.BtnUP.wasPressed())
     {
