@@ -1,11 +1,14 @@
-
+#include <Arduino.h>
 #include <M5CoreInk.h>
 #include <WiFi.h>
+#include <time.h>
 
 #include <envsensors.hpp>
 
 #include "esp_adc_cal.h"
 #include "icon.h"
+
+#define WIFI_RETRY_CONNECTION 10
 
 Ink_Sprite TimePageSprite(&M5.M5Ink);
 Ink_Sprite TimeSprite(&M5.M5Ink);
@@ -14,6 +17,15 @@ Ink_Sprite DateSprite(&M5.M5Ink);
 RTC_TimeTypeDef RTCtime, RTCTimeSave;
 RTC_DateTypeDef RTCDate;
 uint8_t second = 0, minutes = 0;
+
+const char* NTP_SERVER = "ch.pool.ntp.org";
+const char* TZ_INFO    = "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00";  // enter your time zone (https://remotemonitoringsystems.ca/time-zone-abbreviations.php)
+
+tm timeinfo;
+time_t now;
+long unsigned lastNTPtime;
+unsigned long lastEntryTime;
+
 
 bool testMode = false;
 
@@ -409,13 +421,84 @@ void checkRTC() {
     }
 }
 
+void showTime(tm localTime) {
+    Serial.print("[NTP] ");
+    Serial.print(localTime.tm_mday);
+    Serial.print('/');
+    Serial.print(localTime.tm_mon + 1);
+    Serial.print('/');
+    Serial.print(localTime.tm_year - 100);
+    Serial.print('-');
+    Serial.print(localTime.tm_hour);
+    Serial.print(':');
+    Serial.print(localTime.tm_min);
+    Serial.print(':');
+    Serial.print(localTime.tm_sec);
+    Serial.print(" Day of Week ");
+    if (localTime.tm_wday == 0)
+        Serial.println(7);
+    else
+        Serial.println(localTime.tm_wday);
+}
+
+bool getNTPtime(int sec) {
+    {
+        Serial.print("[NTP] sync.");
+        uint32_t start = millis();
+        do {
+            time(&now);
+            localtime_r(&now, &timeinfo);
+            Serial.print(".");
+            delay(10);
+        } while (((millis() - start) <= (1000 * sec)) && (timeinfo.tm_year < (2016 - 1900)));
+        if (timeinfo.tm_year <= (2016 - 1900)) return false;  // the NTP call was not successful
+        Serial.print("now ");
+        Serial.println(now);
+        char time_output[30];
+        strftime(time_output, 30, "%a  %d-%m-%y %T", localtime(&now));
+        Serial.print("[NTP] ");
+        Serial.println(time_output);
+    }
+    return true;
+}
+
+void ntpInit() {
+    if (WiFi.isConnected()) {
+        configTime(0, 0, NTP_SERVER);
+        // See https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv for Timezone codes for your region
+        setenv("TZ", TZ_INFO, 1);
+
+        if (getNTPtime(10)) {  // wait up to 10sec to sync
+        } else {
+            Serial.println("[NTP] Time not set");
+            ESP.restart();
+        }
+        showTime(timeinfo);
+        lastNTPtime = time(&now);
+        lastEntryTime = millis();
+    }
+}
+
+void wifiInit() {
+    Serial.print("[WiFi] connecting to "+String(WIFI_SSID));
+    WiFi.begin(WIFI_SSID, WIFI_PASS);
+    int wifi_retry = 0;
+    while (WiFi.status() != WL_CONNECTED && wifi_retry++ < WIFI_RETRY_CONNECTION) { 
+        Serial.print(".");
+        delay(500);
+    }
+    if (wifi_retry==WIFI_RETRY_CONNECTION)
+        Serial.println(" failed!");
+    else
+        Serial.println(" connected!");
+}
+
 void setup() {
     M5.begin();
-
     digitalWrite(LED_EXT_PIN, LOW);
-
     Serial.println(__TIME__);
-
+    wifiInit();
+    ntpInit();
     M5.rtc.GetTime(&RTCTimeSave);
     M5.update();
     if (M5.BtnMID.isPressed()) {
