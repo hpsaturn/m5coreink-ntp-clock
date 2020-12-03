@@ -2,9 +2,8 @@
 #include <M5CoreInk.h>
 #include <WiFi.h>
 #include <time.h>
-
+#include <Preferences.h>
 #include <envsensors.hpp>
-
 #include "esp_adc_cal.h"
 #include "icon.h"
 
@@ -18,7 +17,7 @@ RTC_TimeTypeDef RTCtime, RTCTimeSave;
 RTC_DateTypeDef RTCDate;
 uint8_t second = 0, minutes = 0;
 
-RTC_DATA_ATTR unsigned int clock_suspend = 0;
+Preferences preferences;
 
 const char* NTP_SERVER = "ch.pool.ntp.org";
 const char* TZ_INFO    = "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00";  // enter your time zone (https://remotemonitoringsystems.ca/time-zone-abbreviations.php)
@@ -44,7 +43,7 @@ void drawTime(RTC_TimeTypeDef *time) {
     drawImageToSprite(150, 48, &num55[time->Minutes % 10], &TimePageSprite);
 }
 
-void darwDate(RTC_DateTypeDef *date) {
+void drawDate(RTC_DateTypeDef *date) {
     int posX = 15, num = 0;
     for (int i = 0; i < 4; i++) {
         num = (date->Year / int(pow(10, 3 - i)) % 10);
@@ -99,7 +98,7 @@ void drawTimePage() {
     drawTime(&RTCtime);
     minutes = RTCtime.Minutes;
     M5.rtc.GetDate(&RTCDate);
-    darwDate(&RTCDate);
+    drawDate(&RTCDate);
     TimePageSprite.pushSprite();
 }
 
@@ -363,10 +362,23 @@ void WifiScanPage() {
     TimePageSprite.clear(CLEAR_DRAWBUFF | CLEAR_LASTBUFF);
 }
 
+void saveBool(String key, bool value){
+    preferences.begin("M5CoreInk", false);
+    preferences.putBool(key.c_str(), value);
+    preferences.end();
+}
+
+bool loadBool(String key) {
+    preferences.begin("M5CoreInk", false);
+    bool keyvalue =preferences.getBool(key.c_str(),false);
+    preferences.end();
+    return keyvalue;
+}
+
 void flushTimePage() {
-    //M5.M5Ink.clear();
-    //TimePageSprite.clear( CLEAR_DRAWBUFF | CLEAR_LASTBUFF );
-    drawTimePage();
+    // M5.M5Ink.clear();
+    // TimePageSprite.clear( CLEAR_DRAWBUFF | CLEAR_LASTBUFF );
+    // drawTimePage();
     while (1) {
         M5.rtc.GetTime(&RTCtime);
         if (minutes != RTCtime.Minutes) {
@@ -378,10 +390,10 @@ void flushTimePage() {
                 TimePageSprite.clear(CLEAR_DRAWBUFF | CLEAR_LASTBUFF);
             }
             drawTime(&RTCtime);
-            darwDate(&RTCDate);
+            drawDate(&RTCDate);
             TimePageSprite.pushSprite();
             minutes = RTCtime.Minutes;
-            clock_suspend = 1;
+            saveBool("clock_suspend",true);
             delay(100);
             M5.shutdown(50);
         }
@@ -390,7 +402,7 @@ void flushTimePage() {
         M5.update();
         if (M5.BtnPWR.wasPressed()) {
             digitalWrite(LED_EXT_PIN, LOW);
-            // clock_suspend = 0;
+            saveBool("clock_suspend",false);
             M5.shutdown();
         }
         if (M5.BtnDOWN.wasPressed() || M5.BtnUP.wasPressed()) break;
@@ -521,6 +533,23 @@ void wifiInit() {
         Serial.println(" connected!");
 }
 
+int print_wakeup_reason(){
+  esp_sleep_wakeup_cause_t wakeup_reason;
+
+  wakeup_reason = esp_sleep_get_wakeup_cause();
+
+  switch(wakeup_reason){
+    case ESP_SLEEP_WAKEUP_EXT0 : Serial.println("Wakeup caused by external signal using RTC_IO"); break;
+    case ESP_SLEEP_WAKEUP_EXT1 : Serial.println("Wakeup caused by external signal using RTC_CNTL"); break;
+    case ESP_SLEEP_WAKEUP_TIMER : Serial.println("Wakeup caused by timer"); break;
+    case ESP_SLEEP_WAKEUP_TOUCHPAD : Serial.println("Wakeup caused by touchpad"); break;
+    case ESP_SLEEP_WAKEUP_ULP : Serial.println("Wakeup caused by ULP program"); break;
+    default : Serial.printf("Wakeup was not caused by deep sleep: %d\n",wakeup_reason); break;
+  }
+
+  return wakeup_reason;
+}
+
 void setup() {
     M5.begin();
     digitalWrite(LED_EXT_PIN, LOW);
@@ -533,8 +562,9 @@ void setup() {
         testMode = true;
         M5.Speaker.mute();
     }
-
-    if(clock_suspend==0) {
+    // saveBool("clock_suspend",false);
+    
+    if(!loadBool("clock_suspend")) {
         M5.M5Ink.clear();
         M5.M5Ink.drawBuff((uint8_t *)image_CoreInkWWellcome);
         delay(500);
@@ -542,7 +572,6 @@ void setup() {
         ntpInit();
     }
     
-    checkRTC();
     checkBatteryVoltage(false);
 
     TimePageSprite.creatSprite(0, 0, 200, 200);
@@ -550,9 +579,11 @@ void setup() {
     if (testMode) {
         testPage();
     }
-    drawTimePage();
     envsensors_init();
     // M5.Speaker.tone(2700,200);
+    // M5.M5Ink.clear();
+    checkRTC();
+    drawTimePage();
 }
 
 void loop() {
