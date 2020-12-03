@@ -30,7 +30,7 @@ void bmmCalibration(uint32_t timeout) {
 
     timeStart = millis();
 
-    Serial.print("Calibration");
+    Serial.print("[BMM150] calibration.");
 
     while ((millis() - timeStart) < timeout) {
         bmm.read_mag_data();
@@ -128,12 +128,11 @@ void envsensors_loop() {
     float xyHeadingDegrees = xyHeading * 180 / M_PI;
     float zxHeadingDegrees = zxHeading * 180 / M_PI;
 
-    Serial.println("");
-    Serial.print("Heading: ");
+    Serial.print("[BMM150] Heading: ");
     Serial.println(headingDegrees);
-    Serial.print("xyHeadingDegrees: ");
+    Serial.print("[BMM150] xyHeadingDegrees: ");
     Serial.println(xyHeadingDegrees);
-    Serial.print("zxHeadingDegrees: ");
+    Serial.print("[BMM150] zxHeadingDegrees: ");
     Serial.println(zxHeadingDegrees);
 
     // M5.Lcd.setCursor(0, 40, 2);

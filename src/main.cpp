@@ -395,7 +395,7 @@ void flushTimePage() {
 
 void checkBatteryVoltage(bool powerDownFlag) {
     float batVol = getBatVoltage();
-    Serial.printf("Bat Voltage %.2f\r\n", batVol);
+    Serial.printf("[BATT] Voltage %.2f\r\n", batVol);
 
     if (batVol > 3.2) return;
 
@@ -441,6 +441,26 @@ void showTime(tm localTime) {
         Serial.println(localTime.tm_wday);
 }
 
+void saveRtcData() {
+    RTCtime.Minutes = timeinfo.tm_min;
+    RTCtime.Seconds = timeinfo.tm_sec;
+    RTCtime.Hours = timeinfo.tm_hour;
+    RTCDate.Year = timeinfo.tm_year+1900;
+    RTCDate.Month = timeinfo.tm_mon+1;
+    RTCDate.Date = timeinfo.tm_mday;
+    RTCDate.WeekDay = timeinfo.tm_wday;
+
+    char timeStrbuff[64];
+    sprintf(timeStrbuff, "%d/%02d/%02d %02d:%02d:%02d",
+            RTCDate.Year, RTCDate.Month, RTCDate.Date,
+            RTCtime.Hours, RTCtime.Minutes, RTCtime.Seconds);
+
+    Serial.println("[NTP] in: " + String(timeStrbuff));
+
+    M5.rtc.SetTime(&RTCtime);
+    M5.rtc.SetData(&RTCDate);
+}
+
 bool getNTPtime(int sec) {
     {
         Serial.print("[NTP] sync.");
@@ -452,8 +472,10 @@ bool getNTPtime(int sec) {
             delay(10);
         } while (((millis() - start) <= (1000 * sec)) && (timeinfo.tm_year < (2016 - 1900)));
         if (timeinfo.tm_year <= (2016 - 1900)) return false;  // the NTP call was not successful
+
         Serial.print("now ");
         Serial.println(now);
+        saveRtcData();
         char time_output[30];
         strftime(time_output, 30, "%a  %d-%m-%y %T", localtime(&now));
         Serial.print("[NTP] ");
@@ -487,7 +509,7 @@ void wifiInit() {
         Serial.print(".");
         delay(500);
     }
-    if (wifi_retry==WIFI_RETRY_CONNECTION)
+    if (wifi_retry >= WIFI_RETRY_CONNECTION)
         Serial.println(" failed!");
     else
         Serial.println(" connected!");
@@ -497,8 +519,6 @@ void setup() {
     M5.begin();
     digitalWrite(LED_EXT_PIN, LOW);
     Serial.println(__TIME__);
-    wifiInit();
-    ntpInit();
     M5.rtc.GetTime(&RTCTimeSave);
     M5.update();
     if (M5.BtnMID.isPressed()) {
@@ -510,8 +530,10 @@ void setup() {
 
     M5.M5Ink.clear();
     M5.M5Ink.drawBuff((uint8_t *)image_CoreInkWWellcome);
-    delay(500);
 
+    delay(500);
+    wifiInit();
+    ntpInit();
     checkRTC();
     checkBatteryVoltage(false);
 
