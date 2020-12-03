@@ -395,7 +395,7 @@ void flushTimePage() {
             minutes = RTCtime.Minutes;
             saveBool("clock_suspend",true);
             delay(100);
-            M5.shutdown(50);
+            M5.shutdown(56);
         }
 
         delay(10);
@@ -552,6 +552,8 @@ int print_wakeup_reason(){
 
 void setup() {
     M5.begin();
+    Wire.begin(25,26);
+    delay(100);
     digitalWrite(LED_EXT_PIN, LOW);
     Serial.println(__TIME__);
     M5.rtc.GetTime(&RTCTimeSave);
@@ -579,7 +581,8 @@ void setup() {
     if (testMode) {
         testPage();
     }
-    envsensors_init();
+    delay(1000);
+    // envsensors_init();
     // M5.Speaker.tone(2700,200);
     // M5.M5Ink.clear();
     checkRTC();
@@ -589,7 +592,7 @@ void setup() {
 void loop() {
     flushTimePage();
     WifiScanPage();
-    envsensors_loop();
+    // envsensors_loop();
     /*
     if( M5.BtnUP.wasPressed())
     {

@@ -98,8 +98,6 @@ void bmpInit() {
 }
 
 void envsensors_init() {
-    Wire.begin(25,26);
-    delay(100);
     bmmInit();
     bmpInit();
 }
