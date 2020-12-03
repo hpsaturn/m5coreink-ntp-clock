@@ -18,6 +18,8 @@ RTC_TimeTypeDef RTCtime, RTCTimeSave;
 RTC_DateTypeDef RTCDate;
 uint8_t second = 0, minutes = 0;
 
+RTC_DATA_ATTR unsigned int clock_suspend = 0;
+
 const char* NTP_SERVER = "ch.pool.ntp.org";
 const char* TZ_INFO    = "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00";  // enter your time zone (https://remotemonitoringsystems.ca/time-zone-abbreviations.php)
 
@@ -96,7 +98,7 @@ void drawTimePage() {
     M5.rtc.GetTime(&RTCtime);
     drawTime(&RTCtime);
     minutes = RTCtime.Minutes;
-    M5.rtc.GetData(&RTCDate);
+    M5.rtc.GetDate(&RTCDate);
     darwDate(&RTCDate);
     TimePageSprite.pushSprite();
 }
@@ -124,7 +126,7 @@ void testPage() {
 
     char timeStrbuff[64];
     M5.rtc.GetTime(&RTCtime);
-    M5.rtc.GetData(&RTCDate);
+    M5.rtc.GetDate(&RTCDate);
 
     sprintf(timeStrbuff, "%d/%02d/%02d %02d:%02d:%02d",
             RTCDate.Year, RTCDate.Month, RTCDate.Date,
@@ -369,7 +371,7 @@ void flushTimePage() {
         M5.rtc.GetTime(&RTCtime);
         if (minutes != RTCtime.Minutes) {
             M5.rtc.GetTime(&RTCtime);
-            M5.rtc.GetData(&RTCDate);
+            M5.rtc.GetDate(&RTCDate);
 
             if (RTCtime.Minutes % 10 == 0) {
                 M5.M5Ink.clear();
@@ -379,12 +381,16 @@ void flushTimePage() {
             darwDate(&RTCDate);
             TimePageSprite.pushSprite();
             minutes = RTCtime.Minutes;
+            clock_suspend = 1;
+            delay(100);
+            M5.shutdown(50);
         }
 
         delay(10);
         M5.update();
         if (M5.BtnPWR.wasPressed()) {
             digitalWrite(LED_EXT_PIN, LOW);
+            // clock_suspend = 0;
             M5.shutdown();
         }
         if (M5.BtnDOWN.wasPressed() || M5.BtnUP.wasPressed()) break;
@@ -458,7 +464,7 @@ void saveRtcData() {
     Serial.println("[NTP] in: " + String(timeStrbuff));
 
     M5.rtc.SetTime(&RTCtime);
-    M5.rtc.SetData(&RTCDate);
+    M5.rtc.SetDate(&RTCDate);
 }
 
 bool getNTPtime(int sec) {
@@ -528,12 +534,14 @@ void setup() {
         M5.Speaker.mute();
     }
 
-    M5.M5Ink.clear();
-    M5.M5Ink.drawBuff((uint8_t *)image_CoreInkWWellcome);
-
-    delay(500);
-    wifiInit();
-    ntpInit();
+    if(clock_suspend==0) {
+        M5.M5Ink.clear();
+        M5.M5Ink.drawBuff((uint8_t *)image_CoreInkWWellcome);
+        delay(500);
+        wifiInit();
+        ntpInit();
+    }
+    
     checkRTC();
     checkBatteryVoltage(false);
 
