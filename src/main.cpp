@@ -124,7 +124,7 @@ void flushTimePage() {
             TimePageSprite.pushSprite();
             minutes = RTCtime.Minutes;
             // saveBool("clock_suspend",true);
-            delay(100);
+            delay(400);
             M5.shutdown(58);
         }
 
@@ -295,11 +295,11 @@ void setup() {
     checkBatteryVoltage(false);
     TimePageSprite.creatSprite(0, 0, 200, 200, true);
     //TimePageSprite.clear( CLEAR_DRAWBUFF | CLEAR_LASTBUFF );
-    delay(1000);
+    delay(500);
     // envsensors_init();
     // M5.Speaker.tone(2700,200);
     // M5.M5Ink.clear();
-    checkRTC();
+    // checkRTC();
     drawTimePage();
 }
 
