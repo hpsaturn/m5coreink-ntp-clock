@@ -10,8 +10,8 @@
 #define WIFI_RETRY_CONNECTION 10
 
 Ink_Sprite TimePageSprite(&M5.M5Ink);
-Ink_Sprite TimeSprite(&M5.M5Ink);
-Ink_Sprite DateSprite(&M5.M5Ink);
+// Ink_Sprite TimeSprite(&M5.M5Ink);
+// Ink_Sprite DateSprite(&M5.M5Ink);
 
 RTC_TimeTypeDef RTCtime, RTCTimeSave;
 RTC_DateTypeDef RTCDate;
@@ -125,7 +125,7 @@ void flushTimePage() {
             minutes = RTCtime.Minutes;
             // saveBool("clock_suspend",true);
             delay(100);
-            M5.shutdown(59);
+            M5.shutdown(58);
         }
 
         delay(10);
@@ -248,7 +248,6 @@ void ntpInit() {
         configTime(0, 0, NTP_SERVER);
         // See https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv for Timezone codes for your region
         setenv("TZ", TZ_INFO, 1);
-
         if (getNTPtime(10)) {  // wait up to 10sec to sync
         } else {
             Serial.println("[NTP] Time not set");
@@ -257,6 +256,9 @@ void ntpInit() {
         showTime(timeinfo);
         lastNTPtime = time(&now);
         lastEntryTime = millis();
+        M5.Speaker.tone(2700,200);
+        delay(100);
+        M5.Speaker.mute();
     }
 }
 
@@ -276,29 +278,24 @@ void wifiInit() {
 
 void setup() {
     M5.begin();
-    digitalWrite(LED_EXT_PIN, HIGH);   // turnoff it for improve battery life
+    // digitalWrite(LED_EXT_PIN, HIGH);   // turnoff it for improve battery life
+    digitalWrite(LED_EXT_PIN, LOW);   // turnoff it for improve battery life
     // Wire.begin(25,26);              // for Hat sensors
     delay(100);
     Serial.println(__TIME__);
     M5.rtc.GetTime(&RTCTimeSave);
     M5.update();
     if (M5.BtnMID.isPressed()) {
-        M5.Speaker.tone(2700,200);
-        delay(100);
-        M5.Speaker.mute();
         M5.M5Ink.clear();
         M5.M5Ink.drawBuff((uint8_t *)image_CoreInkWWellcome);
         delay(100);
         wifiInit();
-        delay(100);
         ntpInit();
     }
-     
     checkBatteryVoltage(false);
-
-    TimePageSprite.creatSprite(0, 0, 200, 200);
+    TimePageSprite.creatSprite(0, 0, 200, 200, true);
     //TimePageSprite.clear( CLEAR_DRAWBUFF | CLEAR_LASTBUFF );
-    delay(500);
+    delay(1000);
     // envsensors_init();
     // M5.Speaker.tone(2700,200);
     // M5.M5Ink.clear();
