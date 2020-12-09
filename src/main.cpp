@@ -124,7 +124,7 @@ void flushTimePage() {
             TimePageSprite.pushSprite();
             minutes = RTCtime.Minutes;
             // saveBool("clock_suspend",true);
-            // delay(100);
+            delay(100);
             M5.shutdown(59);
         }
 
@@ -276,9 +276,9 @@ void wifiInit() {
 
 void setup() {
     M5.begin();
-    Wire.begin(25,26);
+    digitalWrite(LED_EXT_PIN, HIGH);   // turnoff it for improve battery life
+    // Wire.begin(25,26);              // for Hat sensors
     delay(100);
-    // digitalWrite(LED_EXT_PIN, LOW);
     Serial.println(__TIME__);
     M5.rtc.GetTime(&RTCTimeSave);
     M5.update();
@@ -293,16 +293,16 @@ void setup() {
         delay(100);
         ntpInit();
     }
-    
+     
     checkBatteryVoltage(false);
 
     TimePageSprite.creatSprite(0, 0, 200, 200);
     //TimePageSprite.clear( CLEAR_DRAWBUFF | CLEAR_LASTBUFF );
-    // delay(1000);
+    delay(500);
     // envsensors_init();
     // M5.Speaker.tone(2700,200);
     // M5.M5Ink.clear();
-    // checkRTC();
+    checkRTC();
     drawTimePage();
 }
 
