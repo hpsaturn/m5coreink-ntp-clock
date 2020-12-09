@@ -393,9 +393,9 @@ void flushTimePage() {
             drawDate(&RTCDate);
             TimePageSprite.pushSprite();
             minutes = RTCtime.Minutes;
-            saveBool("clock_suspend",true);
-            delay(100);
-            M5.shutdown(56);
+            // saveBool("clock_suspend",true);
+            // delay(100);
+            M5.shutdown(59);
         }
 
         delay(10);
@@ -559,20 +559,17 @@ void setup() {
     M5.rtc.GetTime(&RTCTimeSave);
     M5.update();
     if (M5.BtnMID.isPressed()) {
-        // M5.Speaker.tone(2700,200);
-        // delay(100);
-        testMode = true;
+        M5.Speaker.tone(2700,200);
+        delay(100);
         M5.Speaker.mute();
-    }
-    // saveBool("clock_suspend",false);
-    
-    if(!loadBool("clock_suspend")) {
         M5.M5Ink.clear();
         M5.M5Ink.drawBuff((uint8_t *)image_CoreInkWWellcome);
         delay(500);
         wifiInit();
         ntpInit();
+        // testMode = true;
     }
+    // saveBool("clock_suspend",false);
     
     checkBatteryVoltage(false);
 
