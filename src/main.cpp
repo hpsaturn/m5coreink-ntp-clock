@@ -119,10 +119,10 @@ void flushTimePage() {
             M5.rtc.GetTime(&RTCtime);
             M5.rtc.GetDate(&RTCDate);
 
-            if (RTCtime.Minutes % 10 == 0) {
-                M5.M5Ink.clear();
-                TimePageSprite.clear(CLEAR_DRAWBUFF | CLEAR_LASTBUFF);
-            }
+            // if (RTCtime.Minutes % 10 == 0) {
+            //     M5.M5Ink.clear();
+            //     TimePageSprite.clear(CLEAR_DRAWBUFF | CLEAR_LASTBUFF);
+            // }
             drawTime(&RTCtime);
             drawDate(&RTCDate);
             TimePageSprite.pushSprite();
