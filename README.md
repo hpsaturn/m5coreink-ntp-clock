@@ -2,7 +2,10 @@
 
 Testing ESP32 M5Stack CoreInk device with a NTP sync clock
 
+
 # Features
+
+<a href="" target="_blank"><img src="images/ntp_clock_eink_refresh.gif" align="right" width="200"></a>
 
 - [x] eInk display refresh without any blink
 - [x] shutdown with RTC implementation
@@ -11,6 +14,7 @@ Testing ESP32 M5Stack CoreInk device with a NTP sync clock
 - [x] added implementation for ENVII hat (disabled for default)
 - [ ] detecting USB charging (only works with battery for now)
 - [ ] Clock features on Left/Right wheel button
+
 
 # WiFi credentials
 
