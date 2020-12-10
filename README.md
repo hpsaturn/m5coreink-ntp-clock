@@ -5,7 +5,7 @@ Testing ESP32 M5Stack CoreInk device with a NTP sync clock
 
 # Features
 
-<a href="" target="_blank"><img src="images/ntp_clock_eink_refresh.gif" align="right" width="200"></a>
+<a href="https://www.youtube.com/watch?v=FnVP3CCfwGk" target="_blank"><img src="images/ntp_clock_eink_refresh.gif" align="right" width="200"></a>
 
 - [x] eInk display refresh without any blink
 - [x] shutdown with RTC implementation
