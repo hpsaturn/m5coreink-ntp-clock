@@ -6,7 +6,6 @@
 #include <envsensors.hpp>
 #include "esp_adc_cal.h"
 #include "icon.h"
-#include "AXP192.h"
 
 #define WIFI_RETRY_CONNECTION 10
 
@@ -28,8 +27,6 @@ time_t now;
 long unsigned lastNTPtime;
 unsigned long lastEntryTime;
 
-//!Power
-AXP192 axp = AXP192();
 
 void drawImageToSprite(int posX, int posY, image_t *imagePtr, Ink_Sprite *sprite) {
     sprite->drawBuff(posX, posY,
@@ -281,7 +278,6 @@ void wifiInit() {
 
 void setup() {
     M5.begin();
-    axp.begin();
     // digitalWrite(LED_EXT_PIN, HIGH);   // turnoff it for improve battery life
     digitalWrite(LED_EXT_PIN, LOW);   // turnoff it for improve battery life
     // Wire.begin(25,26);              // for Hat sensors
