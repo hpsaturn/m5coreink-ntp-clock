@@ -277,9 +277,9 @@ void wifiInit() {
 }
 
 void setup() {
+    pinMode(LED_EXT_PIN, OUTPUT);
+    digitalWrite(LED_EXT_PIN, HIGH);   // turnoff it for improve battery life
     M5.begin();
-    // digitalWrite(LED_EXT_PIN, HIGH);   // turnoff it for improve battery life
-    digitalWrite(LED_EXT_PIN, LOW);   // turnoff it for improve battery life
     // Wire.begin(25,26);              // for Hat sensors
     delay(100);
     Serial.println(__TIME__);
