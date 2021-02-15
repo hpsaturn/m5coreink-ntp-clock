@@ -12,7 +12,7 @@ Testing ESP32 M5Stack CoreInk device with a NTP sync clock
 - [x] run time is only 2 sec each minute
 - [x] NTP sync beep confirmation
 - [x] added implementation for ENVII hat (disabled for default)
-- [ ] detecting USB charging (only works with battery for now)
+- [x] detecting USB charging (only works with battery for now)
 - [ ] Clock features on Left/Right wheel button
 
 
