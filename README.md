@@ -39,7 +39,7 @@ You can look up for your time zone [here](https://remotemonitoringsystems.ca/tim
 
 # Build and Install
 
-Using PlatformIO, more easy than Arduino IDE, run:
+Using [PlatformIO](https://platformio.org/), more easy than Arduino IDE, only run:
 
 ```bash
 pio run --target upload
@@ -48,3 +48,5 @@ pio run --target upload
 # Usage
 
 Press middle button and then power button, when it play a beep, release those. The beep means that NTP works fine.
+
+---
